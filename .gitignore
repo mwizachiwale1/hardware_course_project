@@ -1,0 +1,66 @@
+# Virtual environment
+venv/
+env/
+
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Django specific files
+db.sqlite3  # Ignore the SQLite database file
+*.log       # Ignore log files
+
+# Static and media files (if you have them in your repo)
+staticfiles/
+media/
+
+# Ignore local environment and secret key settings
+.env
+*.env
+
+# IDE configurations (optional, depending on the tools you use)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Django migrations (if you're using version control to manage them separately)
+*/migrations/*.py
+*/migrations/*.pyc
+
+# Coverage reports
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Cache files
+*.cache
+*.mo
+*.pot
+*.orig
+*.bak
+*.log
+
+# Test and coverage reports
+.tox/
+.cache/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# pipenv related files
+Pipfile.lock
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

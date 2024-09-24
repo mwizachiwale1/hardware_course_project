@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+</head>
+<body>
+    <h1>Imicele</h1>
+    <p>Temperature: <span id="temperature"></span></p>
+    <p>Humidity: <span id="humidity"></span></p>
+
+    <canvas id="temperatureChart" width="400" height="200"></canvas>
+    <canvas id="humidityChart" width="400" height="200"></canvas>
+
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', function() {
+        const MAX_DATA_POINTS = 20;  // Limit the number of data points to show on the chart
+
+        const temperatureElement = document.getElementById('temperature');
+        const humidityElement = document.getElementById('humidity');
+    
+        // Initialize the temperature chart
+        const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
+        const temperatureChart = new Chart(temperatureCtx, {
+            type: 'line',
+            data: {
+                labels: [], // The timestamps
+                datasets: [{
+                    label: 'Temperature Over Time',
+                    data: [], // The temperature readings
+                    fill: false,
+                    borderColor: 'rgba(255, 99, 132, 1)', // Red for temperature
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    }
+                }
+            }
+        });
+    
+        // Initialize the humidity chart
+        const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+        const humidityChart = new Chart(humidityCtx, {
+            type: 'line',
+            data: {
+                labels: [], // The timestamps
+                datasets: [{
+                    label: 'Humidity Over Time',
+                    data: [], // The humidity readings
+                    fill: false,
+                    borderColor: 'rgba(54, 162, 235, 1)', // Blue for humidity
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Humidity (%)'
+                        }
+                    }
+                }
+            }
+        });
+    
+        // WebSocket connection for live data
+        const ws = new WebSocket('ws://192.168.43.52:8002/ws/readSensor/');
+    
+        // Handle WebSocket connection open
+        ws.onopen = function() {
+            console.log("WebSocket connection established");
+            // Send a message to trigger the data response
+            ws.send(JSON.stringify({ request: 'get_sensor_data' }));
+        };
+    
+        // Handle messages received from the WebSocket
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+    
+            // Update the DOM with temperature and humidity values
+            temperatureElement.textContent = data.temperature[0];
+            humidityElement.textContent = data.humidity[0];
+        };
+    
+        // HTTP call to fetch the history data for charts
+        function fetchSensorDataForCharts() {
+            fetch('/api/get-sensor-history/')
+                .then(response => response.json())
+                .then(data => {
+                  
+                    // Update the temperature and humidity charts with historical data
+                    updateTemperatureChart(data);
+                    updateHumidityChart(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching sensor history data:', error);
+                });
+        }
+    
+        // Function to update the temperature chart with HTTP data
+        function updateTemperatureChart(jsonData) {
+            const timestamps = jsonData.map(item => new Date(item.timestamps).toLocaleTimeString());
+            const temperatures = jsonData.map(item => item.temperature);
+    
+            // Ensure timestamps and temperatures are limited to MAX_DATA_POINTS
+            if (timestamps.length > MAX_DATA_POINTS) {
+                timestamps.splice(0, timestamps.length - MAX_DATA_POINTS);
+                temperatures.splice(0, temperatures.length - MAX_DATA_POINTS);
+            }
+    
+            // Update the temperature chart's data
+            temperatureChart.data.labels = timestamps;
+            temperatureChart.data.datasets[0].data = temperatures;
+    
+            temperatureChart.update();
+        }
+    
+        // Function to update the humidity chart with HTTP data
+        function updateHumidityChart(jsonData) {
+          console.log(jsonData);
+            const timestamps = jsonData.map(item => new Date(item.timestamps).toLocaleTimeString());
+            const humidities = jsonData.map(item => item.humidity);
+    
+            // Ensure timestamps and humidities are limited to MAX_DATA_POINTS
+            if (timestamps.length > MAX_DATA_POINTS) {
+                timestamps.splice(0, timestamps.length - MAX_DATA_POINTS);
+                humidities.splice(0, humidities.length - MAX_DATA_POINTS);
+            }
+    
+            // Update the humidity chart's data
+            humidityChart.data.labels = timestamps;
+            humidityChart.data.datasets[0].data = humidities;
+    
+            humidityChart.update();
+        }
+    
+        // Fetch initial sensor data for the charts
+        fetchSensorDataForCharts();
+    
+        // Fetch the historical data every 1 minute
+        setInterval(fetchSensorDataForCharts, 60000);
+
+      });
+
+
+        
+    
+      
+    </script>
+</body>
+</html>

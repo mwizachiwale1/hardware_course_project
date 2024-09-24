@@ -34,7 +34,20 @@ def get_bulb_state(request):
 def control_bulb(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        action = data.get('action')
+        text = data.get('action').lower();
+        bulb_action = ""
+        motor_action = ""
+        if "on" in text and "bulb" in text:
+            bulb_action = "TURN_ON"
+        elif "off" in text and "bulb" in text:
+            bulb_action = "TURN_OFF"
+        elif "on" in text and "motor" in text:
+            motor_action = "TURN_ON"
+        elif "off" in text and "motor" in text:
+            motor_action = "TURN_OFF"
+        else:
+            return JsonResponse({'message': f'Bulb turned {motor_action.split("_")[1]}', 'id': user_action.id})
+
         user_action = UserAction.objects.create(action=action)
 
         # Business Logic: Update bulb state based on user action
